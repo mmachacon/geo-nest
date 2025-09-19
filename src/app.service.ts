@@ -5,12 +5,11 @@ import { AxiosError } from 'axios';
 import type { Cache } from 'cache-manager';
 import { createHash } from 'crypto';
 import { firstValueFrom } from 'rxjs';
+import { POINTS_ENDPOINT, PYTHON_SERVICE_BASE_URL } from './constants';
 import { PointsPayloadDto } from './dto/points-payload.dto';
 
 @Injectable()
 export class AppService {
-  private readonly pythonServiceUrl = 'http://localhost:8000/points';
-
   constructor(
     private readonly httpService: HttpService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -28,7 +27,10 @@ export class AppService {
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post(this.pythonServiceUrl, payload),
+        this.httpService.post(
+          `${PYTHON_SERVICE_BASE_URL}${POINTS_ENDPOINT}`,
+          payload,
+        ),
       );
 
       // Store the response from the Python service in the cache

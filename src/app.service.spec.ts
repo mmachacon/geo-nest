@@ -6,6 +6,7 @@ import { AxiosError, AxiosHeaders } from 'axios';
 import type { Cache } from 'cache-manager';
 import { of, throwError } from 'rxjs';
 import { AppService } from './app.service';
+import { POINTS_ENDPOINT, PYTHON_SERVICE_BASE_URL } from './constants';
 import { PointsPayloadDto } from './dto/points-payload.dto';
 
 describe('AppService', () => {
@@ -71,7 +72,7 @@ describe('AppService', () => {
 
       expect(result).toEqual(pythonResponse.data);
       expect(httpSpy).toHaveBeenCalledWith(
-        'http://localhost:8000/points',
+        `${PYTHON_SERVICE_BASE_URL}${POINTS_ENDPOINT}`,
         mockPayload,
       );
       expect(cacheSetSpy).toHaveBeenCalledWith(
@@ -109,6 +110,20 @@ describe('AppService', () => {
         new HttpException(errorResponse, 500),
       );
       expect(cacheSetSpy).not.toHaveBeenCalled();
+    });
+
+    it('should throw a generic HttpException on network error', async () => {
+      // This simulates a network error where axiosError.response is undefined
+      const axiosError = new AxiosError('Network Error');
+
+      jest.spyOn(cacheManager, 'get').mockResolvedValue(undefined);
+      jest
+        .spyOn(httpService, 'post')
+        .mockReturnValue(throwError(() => axiosError));
+
+      await expect(service.processPoints(mockPayload)).rejects.toThrow(
+        new HttpException('Failed to process points.', 500),
+      );
     });
   });
 });

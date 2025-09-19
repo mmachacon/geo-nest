@@ -5,6 +5,7 @@ import { AppModule } from './../src/app.module';
 import * as nock from 'nock';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { POINTS_ENDPOINT, PYTHON_SERVICE_BASE_URL } from '../src/constants';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -34,7 +35,6 @@ describe('AppController (e2e)', () => {
     await cacheManager.reset();
   });
 
-  it('/points (POST) - should forward to python service and return its response', () => {
   it('/points (POST) - should cache responses for identical payloads', async () => {
     const payload = {
       points: [
@@ -48,12 +48,10 @@ describe('AppController (e2e)', () => {
       result: 'some_value',
     };
 
-    nock('http://localhost:8000')
-    const scope = nock('http://localhost:8000')
-      .post('/points', payload)
+    const scope = nock(PYTHON_SERVICE_BASE_URL)
+      .post(POINTS_ENDPOINT, payload)
       .reply(200, pythonServiceResponse);
 
-    return request(app.getHttpServer())
     // First request should hit the Python service
     await request(app.getHttpServer())
       .post('/points')
@@ -79,8 +77,8 @@ describe('AppController (e2e)', () => {
       points: [{ lat: 40.7128, lng: -74.006 }],
     };
 
-    nock('http://localhost:8000')
-      .post('/points', payload)
+    nock(PYTHON_SERVICE_BASE_URL)
+      .post(POINTS_ENDPOINT, payload)
       .reply(500, { error: 'Python service exploded' });
 
     return request(app.getHttpServer())
